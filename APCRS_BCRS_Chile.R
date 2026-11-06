@@ -109,7 +109,7 @@ anota(AP_mediana_positiva = sum(tab$rcri_med > 0, na.rm = TRUE),
 anota(horas = as.numeric(difftime(Sys.time(), t0, units = "hours")))
 rr <- data.frame(medida = names(RES_RUN), valor = vapply(RES_RUN, function(x) signif(x, 6), numeric(1)),
                  row.names = NULL)
-write.csv(rr, file.path(DIR_OUT, sprintf("resumen_ejecucion_P%d_%dkm.csv", P, UNIT_KM)), row.names = FALSE)
+write.csv(rr, file.path(DIR_OUT, sprintf("resumen_ejecucion_P%d_%dkm%s.csv", P, UNIT_KM, TAG_ESC)), row.names = FALSE)
 op <- options(scipen = 999); print(rr, row.names = FALSE); options(op)
 
 unlink(list.files(DIR_TMP, full.names = TRUE), recursive = TRUE)

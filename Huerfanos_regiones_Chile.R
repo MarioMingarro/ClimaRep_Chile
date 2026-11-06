@@ -52,6 +52,8 @@ a_reg <- asigna_unidades(reg, st, cell); a_mz <- asigna_unidades(mz, st, cell)
 r_reg <- a_reg$r
 v_reg <- r_reg[cell]
 v_mz  <- a_mz$r[cell]
+message("Escenario ", if (BUFFER_KM > 0) paste0("con anillo de ", BUFFER_KM, " km") else "red actual",
+        " | superficie protegida (celdas de 1 km) se muestra abajo")
 message("Celdas asignadas a la región más próxima ", a_reg$n_fuera, " | a la macrozona más próxima ", a_mz$n_fuera)
 v_ap  <- values(rasterize(vect(aps), st, field = 1, background = 0, touches = FALSE), mat = FALSE)[cell] == 1
 ex_ap <- terra::extract(st, vect(aps), cells = TRUE, ID = TRUE)
@@ -93,8 +95,8 @@ nac   <- resume(rep(1L, length(cell)), "Chile", nrow(aps))
 t_reg <- t_reg[order(match(t_reg$macrozona, c("Norte", "Centro", "Centro Sur", "Sur", "Austral")), -t_reg$km2), ]
 t_mz  <- rbind(t_mz[order(match(t_mz$unidad, c("Norte", "Centro", "Centro Sur", "Sur", "Austral"))), ], nac)
 names(t_reg)[1] <- "region"; names(t_mz)[1] <- "macrozona"
-write.csv(t_reg, file.path(DIR_HU, sprintf("resumen_regiones_P%d_%dkm.csv", P, UNIT_KM)), row.names = FALSE)
-write.csv(t_mz,  file.path(DIR_HU, sprintf("resumen_macrozonas_P%d_%dkm.csv", P, UNIT_KM)), row.names = FALSE)
+write.csv(t_reg, file.path(DIR_HU, sprintf("resumen_regiones_P%d_%dkm%s.csv", P, UNIT_KM, TAG_ESC)), row.names = FALSE)
+write.csv(t_mz,  file.path(DIR_HU, sprintf("resumen_macrozonas_P%d_%dkm%s.csv", P, UNIT_KM, TAG_ESC)), row.names = FALSE)
 op <- options(width = 200); print(t_mz, digits = 3, row.names = FALSE); options(op)
 
 
@@ -113,7 +115,7 @@ t_cl <- do.call(rbind, lapply(names(grupos), function(g) {
     q <- pc(X[s, v]); data.frame(grupo = g, celdas = sum(s, na.rm = TRUE), variable = v, p10 = q[1], p50 = q[2], p90 = q[3])
   }))
 }))
-write.csv(t_cl, file.path(DIR_HU, sprintf("clima_huerfanos_P%d_%dkm.csv", P, UNIT_KM)), row.names = FALSE)
+write.csv(t_cl, file.path(DIR_HU, sprintf("clima_huerfanos_P%d_%dkm%s.csv", P, UNIT_KM, TAG_ESC)), row.names = FALSE)
 print(reshape(t_cl[t_cl$grupo %in% c("Chile", "con_analogo", "huerfanos"), c("grupo", "variable", "p50")],
               idvar = "variable", timevar = "grupo", direction = "wide"), digits = 4, row.names = FALSE)
 
@@ -125,7 +127,7 @@ r_cl  <- rast(st); vv <- rep(NA_real_, ncell(r_cl)); vv[cell] <- clase; values(r
 levels(r_cl) <- data.frame(id = 1:4, clase = c("Huérfano", "Una AP", "2 a 4 AP", "5 o más AP"))
 col_cl <- c("#B2182B", "#EF8A62", "#92C5DE", "#2166AC")
 coltab(r_cl) <- data.frame(value = 1:4, col = col_cl)
-writeRaster(r_cl, file.path(DIR_HU, sprintf("clases_redundancia_P%d_%dkm_EA_1km.tif", P, UNIT_KM)),
+writeRaster(r_cl, file.path(DIR_HU, sprintf("clases_redundancia_P%d_%dkm%s_EA_1km.tif", P, UNIT_KM, TAG_ESC)),
             datatype = "INT1U", overwrite = TRUE, gdal = "COMPRESS=LZW")
 
 
@@ -145,7 +147,7 @@ if (!is.null(kp)) {
   t_kp$n_AP <- NULL
   t_kp <- cbind(tipo = t_kp$unidad, descripcion = desc, t_kp[, -1])
   t_kp <- t_kp[order(-t_kp$km2_huerfanos, -t_kp$km2), ]
-  write.csv(t_kp, file.path(DIR_HU, sprintf("resumen_koppen_P%d_%dkm.csv", P, UNIT_KM)), row.names = FALSE)
+  write.csv(t_kp, file.path(DIR_HU, sprintf("resumen_koppen_P%d_%dkm%s.csv", P, UNIT_KM, TAG_ESC)), row.names = FALSE)
   op <- options(width = 200)
   print(t_kp[, c("tipo", "descripcion", "km2", "pct_protegido", "km2_huerfanos", "pct_huerfanos",
                  "pct_del_total_huerfanos", "pct_muy_infrarrep", "RCRI_mediana")], digits = 3, row.names = FALSE)
@@ -177,7 +179,7 @@ if (!is.null(kp)) {
 
 # 6 Figuras ----
 
-png(file.path(DIR_HU, sprintf("mapa_clases_redundancia_P%d_%dkm.png", P, UNIT_KM)),
+png(file.path(DIR_HU, sprintf("mapa_clases_redundancia_P%d_%dkm%s.png", P, UNIT_KM, TAG_ESC)),
     width = 1600, height = 3200, res = 300)
 plot(r_cl, axes = FALSE, box = FALSE, mar = c(1, 1, 1, 6),
      plg = list(title = "Climas respaldados por", cex = 0.7))
@@ -198,7 +200,7 @@ panel <- function(p, i_fondo, col_fondo, i_frente = NULL, col_frente = NULL) {
        xlim = range(X[, p[1]], na.rm = TRUE), ylim = range(X[, p[2]], na.rm = TRUE))
   if (!is.null(i_frente)) points(X[i_frente, p[1]], X[i_frente, p[2]], pch = ".", col = col_frente)
 }
-f_esp <- file.path(DIR_HU, sprintf("espacio_climatico_huerfanos_P%d_%dkm.png", P, UNIT_KM))
+f_esp <- file.path(DIR_HU, sprintf("espacio_climatico_huerfanos_P%d_%dkm%s.png", P, UNIT_KM, TAG_ESC))
 if (is.null(v_kp)) {
   png(f_esp, width = 1300 * length(pares), height = 1300, res = 300)
   par(mfrow = c(1, length(pares)), mar = c(4.2, 4.2, 1, 1), mgp = c(2.4, 0.7, 0), cex.lab = 0.8)
@@ -227,7 +229,7 @@ if (is.null(v_kp)) {
   tb$pct_resto <- 100 - tb$pct_huerfanos - tb$pct_muy_infrarrep
   tb <- tb[order(tb$pct_huerfanos + tb$pct_muy_infrarrep), ]
   m  <- t(as.matrix(tb[, c("pct_huerfanos", "pct_muy_infrarrep", "pct_resto")]))
-  png(file.path(DIR_HU, sprintf("koppen_huerfanos_P%d_%dkm.png", P, UNIT_KM)),
+  png(file.path(DIR_HU, sprintf("koppen_huerfanos_P%d_%dkm%s.png", P, UNIT_KM, TAG_ESC)),
       width = 2600, height = 500 + 120 * nrow(tb), res = 300)
   layout(matrix(1:2, 2), heights = c(120 * nrow(tb) + 300, 200))
   par(mar = c(4, 17, 1, 1), mgp = c(2.2, 0.6, 0))

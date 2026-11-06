@@ -38,10 +38,11 @@ P        <- round(TH * 100)
 DIR_RES  <- file.path(DIR_BASE, "RESULTADOS")
 # Escenario. 0 es la red actual; un valor mayor añade a cada AP un anillo de
 # BUFFER_KM km que excluye el terreno de cualquier AP (zona de amortiguación).
-BUFFER_KM <- 5
+BUFFER_KM <- 0
 dir_escenario <- function(buffer_km)
   file.path(DIR_RES, sprintf("APCRS_P%d_%dkm%s", P, UNIT_KM, if (buffer_km > 0) sprintf("_B%gkm", buffer_km) else ""))
 DIR_OUT  <- dir_escenario(BUFFER_KM)
+TAG_ESC  <- if (BUFFER_KM > 0) sprintf("_B%gkm", BUFFER_KM) else ""   # sufijo de escenario en los nombres de salida
 DIR_TMP  <- file.path(DIR_OUT, "tmp")
 CLIM_VIF <- file.path(DIR_RES, "clima", "present_climate_VIF_WGS84.tif")
 TAG_BA   <- sprintf("BCRS_area_%dkm_P%d", UNIT_KM, P)
@@ -55,5 +56,5 @@ s_m <- UNIT_KM * 1000
 PATH_AP_ESC <- if (BUFFER_KM > 0) file.path(DIR_OUT, "APs_escenario.gpkg") else PATH_AP
 message("Escala ", UNIT_KM, " km | P", P, " | anillo ", BUFFER_KM, " km | salida ", DIR_OUT)
 
-RES_RUN <- list(UNIT_KM = UNIT_KM, TH = TH)
+RES_RUN <- list(UNIT_KM = UNIT_KM, TH = TH, BUFFER_KM = BUFFER_KM)
 anota <- function(...) { x <- list(...); RES_RUN[names(x)] <<- x; invisible(NULL) }
